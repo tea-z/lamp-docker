@@ -1,0 +1,51 @@
+version: '2.1'
+services:
+
+  httpd:
+    image: devilbox/apache-2.4:latest
+    container_name: httpd
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/www:/var/www
+      - /shared/httpd:/shared/httpd
+    environment:
+      - PHP_FPM_ENABLE=1
+      - PHP_FPM_SERVER_ADDR=php-fpm
+      - PHP_FPM_SERVER_PORT=9000
+      - MASS_VHOST_ENABLE=1
+      - TIMEZONE=Europe/Berlin
+    links:
+      - php-fpm
+      - mysql
+
+  php-fpm:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-fpm
+    ports:
+      - "9000:9000"
+    volumes:
+      - /etc/php.ini:/etc/php.ini
+      - /etc/php-fpm.d:/etc/php-fpm.d
+      - /var/www:/var/www
+      - /shared/httpd:/shared/httpd
+    environment:
+      - TIMEZONE=Europe/Berlin
+  mysql:
+    image: cytopia/mariadb-10.2:latest
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+      - /var/log/mysql:/var/log/mysql
+      - /var/sock/mysqld:/var/sock/mysqld
+      - /etc/mysql/conf.d:/etc/mysql/conf.d
+      - /etc/mysql/docker-default.d:/etc/mysql/docker-default.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_GENERAL_LOG=1
+      - TIMEZONE=Europe/Berlin
